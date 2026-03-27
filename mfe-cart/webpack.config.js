@@ -4,18 +4,26 @@ const { ModuleFederationPlugin } = require('webpack').container;
 
 module.exports = {
   entry: './src/index.js',
-  mode: 'development',
+
+  output: {
+    publicPath: 'http://localhost:3002/',
+  },
+
   devServer: {
     port: 3002,
     historyApiFallback: true,
-    headers: { 'Access-Control-Allow-Origin': '*' },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
   },
+
   resolve: {
     extensions: ['.js', '.jsx'],
     alias: {
-      'shared': path.resolve(__dirname, '../shared'),
+      shared: path.resolve(__dirname, '../shared'),
     },
   },
+
   module: {
     rules: [
       {
@@ -34,9 +42,18 @@ module.exports = {
       },
     ],
   },
+
   plugins: [
     new ModuleFederationPlugin({
-      // TODO: configurer ce MFE pour exposer le composant Cart
+      name: 'mfeCart',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './Cart': './src/components/Cart',
+      },
+      shared: {
+        react: { singleton: true, requiredVersion: '^18.2.0' },
+        'react-dom': { singleton: true, requiredVersion: '^18.2.0' },
+      },
     }),
     new HtmlWebpackPlugin({
       template: './public/index.html',
