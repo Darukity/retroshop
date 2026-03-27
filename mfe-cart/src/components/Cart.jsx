@@ -1,22 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import eventBus from 'shared/eventBus';
 import './Cart.css';
 
 function Cart() {
   const [items, setItems] = useState([]);
 
+  useEffect(() => {
+    const unsubscribe = eventBus.on('cart:add-item', ({ product }) => {
+      setItems((prevItems) => [
+        ...prevItems,
+        {
+          ...product,
+          cartId: `${product.id}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        },
+      ]);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   const total = items.reduce((sum, item) => sum + item.price, 0);
 
   useEffect(() => {
-    // TODO: ecouter les ajouts de produits et mettre a jour le state
-  }, []);
-
-  useEffect(() => {
-    // TODO: notifier le reste de l'application quand le panier change
-  }, [items]);
+    eventBus.emit('cart:updated', {
+      items,
+      count: items.length,
+      total,
+      categories: [...new Set(items.map((item) => item.category))],
+    });
+  }, [items, total]);
 
   const handleRemove = (cartId) => {
-    setItems(prev => prev.filter(item => item.cartId !== cartId));
+    setItems((prevItems) => prevItems.filter((item) => item.cartId !== cartId));
   };
 
   const handleClear = () => {
@@ -26,22 +43,31 @@ function Cart() {
   return (
     <div className="cart">
       <h2>Panier ({items.length})</h2>
+
       {items.length === 0 ? (
         <p className="empty">Panier vide</p>
       ) : (
         <>
           <ul className="cart-items">
-            {items.map(item => (
+            {items.map((item) => (
               <li key={item.cartId} className="cart-item">
                 <span className="item-name">{item.name}</span>
                 <span className="item-price">{item.price} EUR</span>
-                <button className="remove-btn" onClick={() => handleRemove(item.cartId)}>x</button>
+                <button
+                  className="remove-btn"
+                  onClick={() => handleRemove(item.cartId)}
+                >
+                  x
+                </button>
               </li>
             ))}
           </ul>
+
           <div className="cart-footer">
             <div className="cart-total">Total : {total} EUR</div>
-            <button className="clear-btn" onClick={handleClear}>Vider le panier</button>
+            <button className="clear-btn" onClick={handleClear}>
+              Vider le panier
+            </button>
           </div>
         </>
       )}
