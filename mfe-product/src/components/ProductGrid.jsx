@@ -20,7 +20,17 @@ function ProductCard({ product, onAdd }) {
 
 function ProductGrid() {
   const handleAdd = (product) => {
-    // TODO: notifier le reste de l'application qu'un produit a ete ajoute
+    eventBus.emit('cart:add-item', {
+      product: {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        category: product.category,
+        image: product.image,
+      },
+      source: 'mfe-product',
+      addedAt: Date.now(),
+    });
   };
 
   return (
