@@ -2,10 +2,16 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
 
 import eventBus from 'shared/eventBus';
+import RecommendationsFallback from './components/RecommendationsFallback';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const ProductGrid = lazy(() => import('mfeProduct/ProductGrid'));
 const Cart = lazy(() => import('mfeCart/Cart'));
-const Recommendations = lazy(() => import('mfeReco/Recommendations'));
+const Recommendations = lazy(() =>
+  import('mfeReco/Recommendations').catch(() => ({
+    default: RecommendationsFallback,
+  }))
+);
 
 function LoadingFallback({ name }) {
   return <div className="loading-fallback">Chargement {name}...</div>;
@@ -43,9 +49,11 @@ function App() {
         </aside>
       </main>
       <section className="reco-area">
-        <Suspense fallback={<LoadingFallback name="Recommendations" />}>
+        <ErrorBoundary fallback={<RecommendationsFallback />}>
+        <Suspense fallback={<div>Loading recommendations...</div>}>
           <Recommendations />
         </Suspense>
+      </ErrorBoundary>
       </section>
     </div>
   );
