@@ -7,11 +7,38 @@ function Recommendations() {
   const [recos, setRecos] = useState(PRODUCTS.slice(0, 3));
 
   useEffect(() => {
-    // TODO: adapter les recommandations en fonction du contenu du panier
+    const unsubscribe = eventBus.on('cart:updated', ({ categories }) => {
+      if (!categories || categories.length === 0) {
+        setRecos(PRODUCTS.slice(0, 3));
+        return;
+      }
+
+      const categorySet = new Set(categories);
+
+      const nextRecos = PRODUCTS
+        .filter(product => !categorySet.has(product.category))
+        .slice(0, 3);
+
+      setRecos(nextRecos.length > 0 ? nextRecos : PRODUCTS.slice(0, 3));
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const handleAddReco = (product) => {
-    // TODO: ajouter ce produit au panier (meme evenement que ProductGrid)
+    eventBus.emit('cart:add-item', {
+    product: {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      category: product.category,
+      image: product.image,
+    },
+    source: 'mfe-reco',
+    addedAt: Date.now(),
+  });
   };
 
   return (
